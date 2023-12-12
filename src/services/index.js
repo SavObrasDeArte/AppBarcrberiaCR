@@ -12,15 +12,23 @@ import "toastify-js/src/toastify.css"
 const arrayDias = ["Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"]
 
 //SERVICE WORKER
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js')
-    .then(registration => {
-      console.log('Service Worker registrado con éxito:', registration);
-    })
-    .catch(error => {
-      console.log('Error al registrar el Service Worker:', error);
+export function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/sw.js') // Ruta relativa al Service Worker
+        .then(registration => {
+          console.log('Service Worker registrado con éxito:', registration);
+        })
+        .catch(error => {
+          console.error('Error al registrar el Service Worker:', error);
+        });
     });
+  } else {
+    console.log('Los service workers no son soportados en este navegador.');
+  }
 }
+registerServiceWorker()
 
 
 const firebaseConfig = JSON.parse(import.meta.env.VITE_FIREBASE_CONFIG)

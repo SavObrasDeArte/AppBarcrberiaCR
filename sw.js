@@ -1,13 +1,8 @@
 const CACHE_NAME = 'mi-cache';
 const urlsToCache = [
     '/',
-    'index.html',
-    'assets/index-fc1d2f65.css',
-    'assets/index-f6d492cb.js',
-    'assets/Iconpin-22bb335a.svg',
-    'assets/green-arrow-ff12fa96.svg',
-    'assets/logo-4d2b120b.png',
-    'manifest.json',
+    '/index.html',
+    '/src/main.jsx',
 ];
 
 self.addEventListener('install', event => {
@@ -22,33 +17,36 @@ self.addEventListener('install', event => {
 
 self.addEventListener('fetch', event => {
     event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                if (response) {
-                    return response;
-                }
+        (async function () {
+            try {
+                if (event.request.url.startsWith('http')) {
+                    const cachedResponse = await caches.match(event.request);
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                    const fetchRequest = event.request.clone();
+                    const response = await fetch(fetchRequest);
 
-                const fetchRequest = event.request.clone();
-
-                return fetch(fetchRequest).then(
-                    function (response) {
-                        if (!response || response.status !== 200 || response.type !== 'basic') {
-                            return response;
-                        }
-
-                        const responseToCache = response.clone();
-
-                        caches.open(CACHE_NAME)
-                            .then(cache => {
-                                cache.put(event.request, responseToCache);
-                            });
-
+                    if (!response || response.status !== 200 || response.type !== 'basic') {
                         return response;
                     }
-                );
-            })
+                    const responseToCache = response.clone();
+                    const cache = await caches.open(CACHE_NAME);
+                    await cache.put(event.request, responseToCache);
+
+                    return response;
+                } else {
+                    return fetch(event.request);
+                }
+            } catch (error) {
+                console.error('Error en el Service Worker fetch:', error);
+                throw error;
+            }
+        })()
     );
 });
+
+
 
 self.addEventListener('activate', event => {
     const cacheWhitelist = ['mi-cache'];
